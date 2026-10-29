@@ -1,0 +1,370 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Tres meses de nosotros</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@800&family=Caveat:wght@600&family=Hanken+Grotesk:wght@400;600&display=swap">
+<style>
+/* Layout: un reproductor tipo serie. Escenario SVG arriba, subtítulo grande abajo, episodios como capítulos.
+   Paleta: noche violeta de fondo, ámbar para Damián, rosa para Yuzuri. */
+:root{
+  --bg:#0e0a1c;
+  --panel:#171229;
+  --ink:#f7efe6;
+  --muted:#b9acc9;
+  --amber:#ffb547;
+  --rose:#ff7fa8;
+  --line:rgba(255,255,255,.14);
+  --display:'Big Shoulders Display','Arial Narrow',Impact,sans-serif;
+  --body:'Hanken Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --hand:'Caveat','Segoe Script','Bradley Hand',cursive;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px;min-height:100vh}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.wrap{max-width:960px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.mark{font-family:var(--display);font-weight:800;font-size:1.5rem;letter-spacing:.14em;text-transform:uppercase}
+.for{font-family:var(--hand);font-size:1.5rem;color:var(--rose)}
+
+.player{display:flex;flex-direction:column;gap:16px}
+.stage{position:relative;aspect-ratio:8/5;border-radius:14px;overflow:hidden;background:#150a2e;box-shadow:0 30px 60px -30px rgba(0,0,0,.8),0 0 0 1px var(--line)}
+@media(max-width:600px){.stage{aspect-ratio:4/3}}
+#svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.segs{position:absolute;top:10px;left:12px;right:12px;display:flex;gap:4px;z-index:3;pointer-events:none}
+.seg{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.25);overflow:hidden}
+.seg b{display:block;height:100%;background:#fff;transform-origin:left;transform:scaleX(0)}
+.seg.done b{transform:scaleX(1)}
+.seg.cur b{animation:fill var(--dur) linear forwards}
+.seg.hold b{animation:none;transform:scaleX(1)}
+.player.paused .seg.cur b{animation-play-state:paused}
+@keyframes fill{to{transform:scaleX(1)}}
+.tap{position:absolute;top:0;bottom:0;background:none;border:0;z-index:2;padding:0}
+.tap.prev{left:0;width:35%}.tap.next{right:0;width:65%}
+
+.intro{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;
+  background:radial-gradient(ellipse at 50% 55%,rgba(14,10,28,.55),rgba(14,10,28,.88))}
+.intro[hidden]{display:none}
+.intro h1{margin:0;font-family:var(--display);font-weight:800;font-size:clamp(3.4rem,13vw,7.5rem);line-height:.9;letter-spacing:.04em;text-transform:uppercase;text-wrap:balance}
+.intro h1 span{display:block;color:var(--amber)}
+.intro p{margin:0;font-family:var(--hand);font-size:clamp(1.4rem,3.6vw,2rem);color:var(--rose)}
+.go{margin-top:10px;background:var(--amber);color:#2a1606;border:0;border-radius:999px;padding:12px 30px;font-weight:600;font-size:1.05rem;transition:transform .15s}
+.go:hover{transform:scale(1.04)}
+.hint{font-size:.85rem;color:var(--muted)}
+
+.cap{display:grid;gap:8px;min-height:7.5rem}
+.tag{margin:0;font-family:var(--hand);font-size:1.5rem;color:var(--amber);line-height:1.1}
+.line{margin:0;font-size:clamp(1.15rem,2.8vw,1.5rem);line-height:1.45;max-width:60ch;text-wrap:pretty}
+.cap.swap .tag,.cap.swap .line{animation:up .7s ease both}
+.cap.swap .line{animation-delay:.12s}
+@keyframes up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+.ctrls{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ic{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--panel);display:grid;place-items:center;padding:0}
+.ic:hover{border-color:var(--amber)}
+.ic[disabled]{opacity:.35;cursor:default}
+.ic svg{width:18px;height:18px;fill:currentColor}
+.pos{margin-left:auto;color:var(--muted);font-size:.9rem;font-variant-numeric:tabular-nums}
+.replay{background:none;border:1px solid var(--rose);color:var(--rose);border-radius:999px;padding:8px 18px}
+.replay[hidden]{display:none}
+
+.eps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:560px){.eps{grid-template-columns:1fr}}
+.ep{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:2px;min-width:0}
+.ep small{font-family:var(--hand);font-size:1.25rem;color:var(--muted);line-height:1}
+.ep strong{font-family:var(--display);font-weight:800;font-size:1.6rem;letter-spacing:.05em;text-transform:uppercase;line-height:1.1}
+.ep[aria-current="true"]{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.ep[aria-current="true"] small{color:var(--amber)}
+.foot{text-align:center;color:var(--muted);font-family:var(--hand);font-size:1.3rem;margin-top:8px}
+
+/* animaciones del escenario */
+#svg text{font-family:var(--body)}
+.tw{animation:tw 3s ease-in-out infinite}
+@keyframes tw{0%,100%{opacity:.35}50%{opacity:1}}
+.pop{transform-box:fill-box;transform-origin:50% 100%;animation:bub 6s ease-in-out infinite}
+@keyframes bub{0%{opacity:0;transform:scale(.2)}8%{opacity:1;transform:scale(1.08)}12%{transform:scale(1)}42%{opacity:1}52%,100%{opacity:0;transform:scale(.9)}}
+.floatup{animation:floatup 5s ease-out infinite}
+@keyframes floatup{0%{opacity:0;transform:translateY(0)}15%{opacity:1}100%{opacity:0;transform:translateY(-130px)}}
+.dash{animation:dash 1.6s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-38}}
+.drop{animation:drop 1s linear infinite}
+@keyframes drop{from{transform:translateY(-30px)}to{transform:translateY(520px)}}
+.cloud{animation:cloud 9s ease-in-out infinite alternate}
+@keyframes cloud{from{transform:translateX(-18px)}to{transform:translateX(18px)}}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(.8);opacity:.15}50%{transform:scale(1.25);opacity:.4}}
+.neon{animation:neon 4s steps(1) infinite}
+@keyframes neon{0%,100%{opacity:1}30%{opacity:1}31%{opacity:.5}32%{opacity:1}70%{opacity:1}71%{opacity:.6}73%{opacity:1}}
+.beam{animation:sway 6s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-5deg)}to{transform:rotate(5deg)}}
+.spin{transform-box:fill-box;transform-origin:center;animation:spin 4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.eq{transform-box:fill-box;transform-origin:50% 100%;animation:eq .9s ease-in-out infinite alternate}
+@keyframes eq{from{transform:scaleY(.25)}to{transform:scaleY(1)}}
+.bolt{animation:bolt 5s linear infinite;opacity:0}
+.flash{animation:flash 5s linear infinite;opacity:0}
+@keyframes bolt{0%,91%,100%{opacity:0}92%{opacity:1}93%{opacity:0}94%{opacity:.9}97%{opacity:0}}
+@keyframes flash{0%,91%,100%{opacity:0}92%{opacity:.55}93%{opacity:0}94%{opacity:.35}97%{opacity:0}}
+.fadein{animation:fadein 1.2s ease both}
+@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dr{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 1.2s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+.walkL{animation:walkL 6s ease-in-out forwards}
+.walkR{animation:walkR 6s ease-in-out forwards}
+@keyframes walkL{from{transform:translate(0,0)}to{transform:translate(190px,78px)}}
+@keyframes walkR{from{transform:translate(0,0)}to{transform:translate(-190px,78px)}}
+.closeL{animation:closeL 5s ease-in-out forwards}
+.closeR{animation:closeR 5s ease-in-out forwards}
+@keyframes closeL{from{transform:translateX(-90px)}to{transform:none}}
+@keyframes closeR{from{transform:translateX(90px)}to{transform:none}}
+.slide{animation:slide 1.4s .9s ease-out both}
+@keyframes slide{from{transform:translateY(0)}to{transform:translateY(-135px)}}
+.flap{transform-box:fill-box;transform-origin:50% 0;animation:flap .8s .3s ease-in-out forwards}
+@keyframes flap{to{transform:scaleY(-1)}}
+.rise{animation:rise 6s ease-out both}
+@keyframes rise{from{transform:translateY(90px)}to{transform:none}}
+.sceneIn{animation:sceneIn .8s ease both}
+@keyframes sceneIn{from{opacity:0}to{opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  #svg *{animation:none!important}
+  #svg .dr{stroke-dashoffset:0!important}
+  .seg.cur b{animation:none!important;transform:scaleX(1)}
+  .cap.swap .tag,.cap.swap .line{animation:none}
+}
+</style>
+
+<div class="wrap">
+  <header class="top"><span class="mark">Tres meses</span><span class="for">para Yuzuri</span></header>
+
+  <section class="player paused" id="player" aria-label="Serie animada">
+    <div class="stage" id="stage">
+      <svg id="svg" viewBox="0 0 800 500" preserveAspectRatio="xMidYMid slice" role="img" aria-label=""></svg>
+      <div class="segs" id="segs"></div>
+      <button class="tap prev" id="tapPrev" aria-label="Escena anterior"></button>
+      <button class="tap next" id="tapNext" aria-label="Escena siguiente"></button>
+      <div class="intro" id="intro">
+        <p>Una serie en tres episodios</p>
+        <h1>Tres meses <span>de nosotros</span></h1>
+        <button class="go" id="go">Ver la serie</button>
+        <span class="hint">Se disfruta más con música de fondo</span>
+      </div>
+    </div>
+
+    <div class="cap" id="cap">
+      <p class="tag" id="tag"></p>
+      <p class="line" id="line"></p>
+    </div>
+
+    <div class="ctrls">
+      <button class="ic" id="prev" aria-label="Anterior"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button class="ic" id="play" aria-label="Pausar"><svg viewBox="0 0 24 24" id="playIcon"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+      <button class="ic" id="next" aria-label="Siguiente"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5l11 7L4 19z"/></svg></button>
+      <button class="replay" id="replay" hidden>Verla de nuevo</button>
+      <span class="pos" id="pos"></span>
+    </div>
+
+    <nav class="eps" id="eps" aria-label="Episodios"></nav>
+  </section>
+
+  <p class="foot">Hecho a mano por Damián, para Yuzuri.</p>
+</div>
+
+<script>
+(function(){
+'use strict';
+const SONGS={1:'',2:'',3:''}; // canción de fondo sugerida por episodio; si se completa, aparece en el subtítulo
+const AMB='#ffb547',AMBD='#b9731a',ROS='#ff7fa8',ROSD='#a63a68';
+const SHORT='M-18 -2 Q-19 -22 0 -21 Q19 -22 18 -2 Q10 -12 0 -10 Q-10 -12 -18 -2Z';
+const LONG='M-19 0 Q-21 -23 0 -22 Q21 -23 19 0 L21 26 Q15 28 14 21 L13 0 Q0 -14 -13 0 L-14 21 Q-15 28 -21 26Z';
+
+function lcg(seed){let s=seed;return()=>{s=(s*16807)%2147483647;return s/2147483647}}
+function stars(n,seed,maxY){const r=lcg(seed);let o='';for(let i=0;i<n;i++){o+=`<circle class="tw" cx="${(r()*800).toFixed(0)}" cy="${(r()*maxY).toFixed(0)}" r="${(0.8+r()*1.5).toFixed(1)}" fill="#fff" style="animation-delay:${(r()*3).toFixed(1)}s"/>`}return o}
+function heart(x,y,s,f){return `<path d="M0 -4 C-8 -14 -22 -2 0 14 C22 -2 8 -14 0 -4Z" transform="translate(${x} ${y}) scale(${s})" fill="${f}"/>`}
+function envelope(){return `<rect x="-11" y="-7" width="22" height="15" rx="2" fill="#fff4dc"/><path d="M-11 -7 L0 2 L11 -7" stroke="${AMBD}" stroke-width="1.5" fill="none"/>`}
+function rain(n,seed,op){const r=lcg(seed);let o=`<g opacity="${op}" stroke="#bcd6ff" stroke-width="1.4" stroke-linecap="round">`;for(let i=0;i<n;i++){const x=r()*800;o+=`<line class="drop" x1="${x.toFixed(0)}" y1="0" x2="${(x-5).toFixed(0)}" y2="16" style="animation-duration:${(0.7+r()*0.6).toFixed(2)}s;animation-delay:-${(r()*2).toFixed(2)}s"/>`}return o+'</g>'}
+function cloud(x,y,s,c,op=1){return `<g class="cloud" opacity="${op}"><g transform="translate(${x} ${y}) scale(${s})" fill="${c}"><ellipse cx="0" cy="0" rx="60" ry="22"/><circle cx="-24" cy="-14" r="24"/><circle cx="14" cy="-24" r="30"/><circle cx="40" cy="-8" r="20"/></g></g>`}
+function notes(list,col='#fff'){return list.map((n,i)=>`<text class="floatup" x="${n[0]}" y="${n[1]}" font-size="${n[2]||26}" fill="${col}" style="animation-delay:${(n[3]!==undefined?n[3]:i*0.9)}s">${n[4]||(i%2?'♫':'♪')}</text>`).join('')}
+
+function defs(sky,orbC){return `<defs>
+<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${sky[0]}"/><stop offset="1" stop-color="${sky[1]}"/></linearGradient>
+<radialGradient id="og"><stop offset="0" stop-color="${orbC}" stop-opacity=".8"/><stop offset="1" stop-color="${orbC}" stop-opacity="0"/></radialGradient>
+<linearGradient id="beamg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="glow" x="-30%" y="-60%" width="160%" height="220%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+</defs>`}
+function orbSvg(o){if(!o)return '';let s=`<g class="${o.pulse?'pulse':''}"><circle cx="${o.x}" cy="${o.y}" r="${o.r*2.8}" fill="url(#og)"/></g><circle cx="${o.x}" cy="${o.y}" r="${o.r}" fill="${o.c}"/>`;
+  if(o.moon)s+=`<g fill="#000" opacity=".08"><circle cx="${o.x-o.r*.3}" cy="${o.y-o.r*.2}" r="${o.r*.22}"/><circle cx="${o.x+o.r*.35}" cy="${o.y+o.r*.3}" r="${o.r*.16}"/><circle cx="${o.x+o.r*.1}" cy="${o.y-o.r*.5}" r="${o.r*.1}"/></g>`;return s}
+function hillsSvg(h){return `<path d="M0 400 C100 320 220 320 330 400 C360 425 440 425 470 400 C580 320 700 320 800 400 L800 500 L0 500Z" fill="${h[0]}"/><path d="M0 470 C200 440 600 440 800 470 L800 500 L0 500Z" fill="${h[1]}"/>`}
+function base(o){return defs(o.sky,o.orb?o.orb.c:'#fff')+`<rect width="800" height="500" fill="url(#sky)"/>`+(o.stars?`<g opacity="${o.stars}">${stars(80,o.seed||7,270)}</g>`:'')+orbSvg(o.orb)+(o.mid||'')+(o.hills===false?'':hillsSvg(o.hc||['#2b1236','#1d0b27']))}
+
+function person(o){
+  const {x,y,s=1,flip=1,c,cd,hair='short',tilt=0,arm=null,sit=false,phone=null,hp=false}=o;
+  const bh=sit?.7:1,hy=-58*bh-13;
+  let g=`<g transform="translate(${x} ${y}) scale(${s*flip} ${s})">`;
+  if(sit)g+=`<ellipse cx="16" cy="-6" rx="24" ry="7" fill="${cd}"/>`;
+  g+=`<path d="M-16 0 L-15 -40 Q-14 -58 0 -58 Q14 -58 15 -40 L16 0Z" fill="${c}" transform="scale(1 ${bh})"/>`;
+  if(arm){const sy=-46*bh;g+=`<line x1="0" y1="${sy}" x2="${arm.x}" y2="${arm.y}" stroke="${c}" stroke-width="8" stroke-linecap="round"/>`;
+    if(phone)g+=`<circle class="pulse" cx="${arm.x}" cy="${arm.y-6}" r="14" fill="${phone}" opacity=".25"/><rect x="${arm.x-4}" y="${arm.y-13}" width="9" height="15" rx="2" fill="${phone}"/>`}
+  g+=`<g transform="translate(0 ${hy}) rotate(${tilt} 0 14)"><circle r="17" fill="${c}"/><path d="${hair==='long'?LONG:SHORT}" fill="${cd}"/>`;
+  if(hp)g+=`<path d="M-20 4 Q-21 -25 0 -25 Q21 -25 20 4" stroke="#1d1530" stroke-width="4" fill="none"/><rect x="-25" y="-2" width="9" height="15" rx="3" fill="#1d1530"/><rect x="16" y="-2" width="9" height="15" rx="3" fill="#1d1530"/>`;
+  return g+'</g></g>';
+}
+const D=(o={})=>person({x:161,y:340,c:AMB,cd:AMBD,hair:'short',arm:{x:30,y:-62},...o});
+const Y=(o={})=>person({x:639,y:340,flip:-1,c:ROS,cd:ROSD,hair:'long',arm:{x:30,y:-62},...o});
+
+function thread(o={}){const {sag=40,col='#ffd9a0',w=2.5,op=.9,flow=true,trav=[]}=o;
+  const d=`M191 278 Q400 ${278+sag*2} 609 278`;
+  let s=`<path id="thr" d="${d}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" opacity="${op}"/>`;
+  if(flow)s+=`<path class="dash" d="${d}" fill="none" stroke="#fff" stroke-width="${w}" stroke-linecap="round" stroke-dasharray="3 16" opacity=".7"/>`;
+  trav.forEach(t=>{s+=`<g>${t.k==='env'?envelope():heart(0,0,t.s||.6,t.c||ROS)}<animateMotion dur="${t.dur}s" begin="-${t.b}s" repeatCount="indefinite" ${t.rev?'keyPoints="1;0" keyTimes="0;1" calcMode="linear"':''}><mpath href="#thr"/></animateMotion></g>`});
+  return s}
+function bubble(x,y,w,flip,delay,content){
+  return `<g class="pop" style="animation-delay:${delay}s"><rect x="${x}" y="${y}" width="${w}" height="46" rx="14" fill="#fff" opacity=".95"/><path d="M${flip>0?x+16:x+w-16} ${y+44} l${flip>0?-6:6} 14 l${flip>0?20:-20} -14Z" fill="#fff" opacity=".95"/>${content(x,y,w)}</g>`}
+const chatLines=(c1)=>(x,y,w)=>`<rect x="${x+14}" y="${y+12}" width="${w*.55}" height="6" rx="3" fill="${c1}"/><rect x="${x+14}" y="${y+24}" width="${w*.4}" height="6" rx="3" fill="${c1}" opacity=".6"/>`;
+const glyph=(t,c)=>(x,y,w)=>`<text x="${x+w/2}" y="${y+35}" text-anchor="middle" font-size="30" font-weight="700" fill="${c}">${t}</text>`;
+
+/* ---------- escenas ---------- */
+const P1={sky:['#241046','#ff7a59'],hc:['#2b1236','#1d0b27']};
+const P2={sky:['#0f1b2e','#4a6a8a'],hc:['#16263a','#0d1826']};
+
+function titleCard(n,mes,name,pal,orb,extra){return ()=>base({...pal,orb,stars:.9,mid:extra||''})+
+  `<g text-anchor="middle"><text class="fadein" x="400" y="170" font-family="Caveat" font-size="42" font-weight="600" fill="${AMB}">Episodio ${n} · ${mes}</text>
+   <text class="fadein" x="400" y="275" font-family="Big Shoulders Display" font-weight="800" font-size="92" letter-spacing="4" fill="#fff" style="animation-delay:.4s;text-transform:uppercase">${name.toUpperCase()}</text></g>`}
+
+const EPS=[
+{n:1,mes:'Mes 1',name:'Sin parar',scenes:[
+ {dur:4,cap:'El primer mes: conocernos a toda velocidad.',draw:titleCard(1,'Mes 1','Sin parar',P1,{x:400,y:330,r:46,c:'#ffd08a',pulse:true})},
+ {cap:'Todo empezó en Sherwood. Dos personas que se cruzaron, y algo que ya no tenía vuelta atrás.',draw:()=>{
+   const beams=[[170,'#ff7fa8'],[400,'#ffb547'],[630,'#9d8cff']].map((b,i)=>`<polygon class="beam" points="${b[0]-14},0 ${b[0]+14},0 ${b[0]+110},440 ${b[0]-110},440" fill="url(#beamg)" style="transform-origin:${b[0]}px 0px;animation-delay:-${i*2}s"/>`).join('');
+   const r=lcg(11);let crowd='';for(let i=0;i<16;i++){const x=20+i*50+r()*14,h=26+r()*16;crowd+=`<path d="M${x-13} 500 L${x-12} ${470-h*.3} Q${x} ${462-h*.5} ${x+12} ${470-h*.3} L${x+13} 500Z" fill="#0c0516"/><circle cx="${x}" cy="${454-h*.5}" r="11" fill="#0c0516"/>`}
+   return base({sky:['#150a2e','#5b1a5e'],stars:.5,hills:false,mid:beams+`<rect x="0" y="438" width="800" height="62" fill="#12071f"/>`})+
+   `<g class="neon" filter="url(#glow)"><rect x="228" y="92" width="344" height="86" rx="10" fill="none" stroke="${ROS}" stroke-width="4"/><text x="400" y="154" text-anchor="middle" font-family="Big Shoulders Display" font-weight="800" font-size="68" letter-spacing="8" fill="#ffe3f0">SHERWOOD</text></g>`+
+   `<g class="closeL">${person({x:310,y:446,s:1.15,c:AMB,cd:AMBD,hair:'short'})}</g><g class="closeR">${person({x:490,y:446,s:1.15,flip:-1,c:ROS,cd:ROSD,hair:'long'})}</g>`+crowd+
+   notes([[120,330,22,0],[680,340,22,1.5],[250,300,20,3],[560,290,20,2.2]],'#ffd9ec')}},
+ {cap:'Y desde ese momento no paramos de hablar. Había tanto para contarse que el día nunca alcanzaba.',draw:()=>base({sky:['#2a1250','#ff7a59'],orb:{x:400,y:330,r:40,c:'#ffd08a',pulse:true},stars:.6,hills:false,mid:`<rect x="0" y="440" width="800" height="60" fill="#1d0b27"/>`})+
+   person({x:300,y:440,s:1.3,c:AMB,cd:AMBD,hair:'short',tilt:-6,arm:{x:22,y:-52}})+person({x:500,y:440,s:1.3,flip:-1,c:ROS,cd:ROSD,hair:'long',tilt:-6,arm:{x:22,y:-52}})+
+   bubble(190,205,120,1,0,chatLines('#c4792f'))+bubble(500,160,150,-1,1.5,chatLines('#c24a78'))+bubble(120,120,100,1,3,chatLines('#c4792f'))+bubble(590,235,110,-1,4.5,chatLines('#c24a78'))+heart(400,250,1.2,ROS)+notes([[380,200,24,0.5,'♪']],'#fff')},
+ {cap:'Vos de un lado, yo del otro, y entre los dos un montón de kilómetros. Pero los mensajes cruzaban todo el tiempo.',draw:()=>base({...P1,orb:{x:400,y:215,r:34,c:'#ffd08a',pulse:true},stars:.7})+
+   thread({sag:40,trav:[{k:'env',dur:5,b:0},{k:'h',dur:6,b:2,rev:true,c:ROS},{k:'env',dur:5.5,b:3,rev:true},{k:'h',dur:6,b:4,c:AMB}]})+D({phone:'#ffe9b8'})+Y({phone:'#ffd1e0'})},
+ {cap:'En medio de tanta charla apareció lo que nos une: el rock nacional. Cada canción se volvió una forma de decirnos cosas.',draw:()=>{
+   const bars=[0,1,2,3,4,5,6].map(i=>`<rect class="eq" x="${352+i*14}" y="${392-[26,40,52,34,46,30,22][i]}" width="9" height="${[26,40,52,34,46,30,22][i]}" rx="3" fill="${i%2?ROS:AMB}" style="animation-delay:-${(i*.17).toFixed(2)}s"/>`).join('');
+   return base({sky:['#1c0f3d','#c2456b'],orb:{x:400,y:190,r:30,c:'#ffd08a'},stars:.8})+thread({sag:36,col:'#ffd9a0',trav:[{k:'h',dur:6,b:0,c:ROS},{k:'h',dur:6,b:3,rev:true,c:AMB}]})+
+   D({hp:true})+Y({hp:true})+bars+notes([[170,260,26,0],[200,230,22,1.3],[610,255,26,.6],[580,225,22,2],[395,330,30,.3],[420,320,24,1.6]])}},
+ {cap:'Para cerrar ese primer mes te di una carta, con unas palabras y las canciones que nos dedicamos. Fue nuestro primer regalo.',draw:()=>base({sky:['#2a1250','#ff7a59'],stars:.5,hills:false,mid:`<rect x="0" y="440" width="800" height="60" fill="#1d0b27"/>`})+
+   `<ellipse cx="400" cy="425" rx="190" ry="14" fill="#000" opacity=".3"/><rect x="270" y="250" width="260" height="150" rx="6" fill="#d9ae67"/>`+
+   `<g class="slide"><rect x="290" y="272" width="220" height="150" rx="5" fill="#fffaf0"/><text x="306" y="304" font-family="Caveat" font-size="30" font-weight="600" fill="#7a4a2a">Para Yuzuri,</text>`+
+   [0,1,2].map(i=>`<text x="306" y="${338+i*26}" font-size="16" fill="#c24a78">♪</text><rect x="326" y="${328+i*26}" width="${[130,100,115][i]}" height="7" rx="3.5" fill="#c9b79a"/>`).join('')+heart(480,405,.8,ROS)+`</g>`+
+   `<polygon points="270,400 270,262 400,338 530,262 530,400" fill="#e8c27f"/><g class="flap"><polygon points="270,250 530,250 400,338" fill="#f2d18f"/></g>`+
+   notes([[250,230,26,1.6],[560,220,26,2.4],[400,200,30,2]],'#ffe3b0')}
+]},
+{n:2,mes:'Mes 2',name:'El hilo',scenes:[
+ {dur:4,cap:'El segundo mes: lo que aguanta cuando todo se mueve.',draw:titleCard(2,'Mes 2','El hilo',P2,{x:400,y:320,r:38,c:'#cfdcf0',moon:true},rain(30,5,.4))},
+ {cap:'El segundo mes llegó con otro clima. Pasaron muchas cosas.',draw:()=>base({...P2,stars:.25})+cloud(200,110,1.3,'#31445d')+cloud(600,90,1.5,'#2a3b52')+cloud(420,140,1.1,'#3a4f6a',.9)+thread({sag:70,col:'#9fb6d6',op:.6,flow:false})+D({phone:'#7e90ad'})+Y({phone:'#7e90ad'})+rain(60,9,.55)},
+ {cap:'Hubo bajones. Días en que la distancia pesaba más y cada uno se quedaba solo con lo suyo.',draw:()=>base({sky:['#0b1424','#3a526d'],hc:P2.hc})+cloud(161,215,.9,'#2b3d55')+cloud(639,215,.9,'#2b3d55')+
+   `<path d="M191 372 Q400 ${372+190} 609 372" fill="none" stroke="#7f93b3" stroke-width="2" opacity=".5" stroke-dasharray="4 10"/>`+
+   D({sit:true,tilt:22,arm:null})+Y({sit:true,tilt:22,arm:null})+rain(55,13,.55)},
+ {cap:'Pero el hilo que nos une no se cortó. Se tensó, se cansó, y siguió ahí.',draw:()=>{
+   const d0=`M191 278 Q400 ${278+160} 609 278`,d1=`M191 278 Q400 ${278+20} 609 278`;
+   return base({...P2,stars:.3,orb:{x:400,y:150,r:26,c:'#cfdcf0',moon:true}})+
+   `<path id="thr" d="${d1}" fill="none" stroke="#ffd9a0" stroke-width="3" stroke-linecap="round"><animate attributeName="d" values="${d0};${d1}" dur="3s" fill="freeze" calcMode="spline" keySplines=".3 0 .2 1"/></path>`+
+   `<path class="dash" d="${d1}" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-dasharray="3 16" opacity=".75"/>`+
+   `<g>${heart(0,0,.7,AMB)}<animateMotion dur="4s" begin="-1s" repeatCount="indefinite"><mpath href="#thr"/></animateMotion></g><g>${heart(0,0,.7,ROS)}<animateMotion dur="4s" begin="-3s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#thr"/></animateMotion></g>`+
+   D({phone:'#ffe9b8'})+Y({phone:'#ffd1e0'})+rain(22,21,.35)}},
+ {cap:'Aprendimos que querernos no era que todo fuera fácil. Era quedarnos.',draw:()=>base({sky:['#26375a','#f2b27e'],orb:{x:400,y:330,r:44,c:'#ffd9a0',pulse:true},stars:.2,hc:['#2a2346','#1a1531']})+
+   `<g opacity=".18" fill="#fff"><polygon points="400,330 150,0 260,0"/><polygon points="400,330 380,0 470,0"/><polygon points="400,330 600,0 700,0"/></g>`+
+   thread({sag:26,trav:[{k:'h',dur:5,b:0,c:AMB},{k:'h',dur:5,b:2.5,rev:true,c:ROS}]})+D({phone:'#ffe9b8'})+Y({phone:'#ffd1e0'})},
+ {cap:'Y llegó el segundo regalo: un dibujo de nosotros dos en Sherwood, hecho a mano, como se hacen las cosas que importan.',draw:()=>{
+   const dr=(d,delay,extra='')=>`<path class="dr" pathLength="1" d="${d}" fill="none" stroke="#3b2f2a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="animation-delay:${delay}s" ${extra}/>`;
+   const fig=(x,col)=>`<ellipse cx="${x}" cy="318" rx="34" ry="52" fill="${col}" opacity=".28"/>`;
+   return base({sky:['#2a1250','#7a2a63'],stars:.6,hills:false,mid:`<rect x="0" y="440" width="800" height="60" fill="#12071f"/>`})+
+   `<g transform="rotate(-2.5 400 250)"><rect x="214" y="48" width="372" height="406" rx="4" fill="#000" opacity=".35" transform="translate(6 8)"/><rect x="214" y="48" width="372" height="406" rx="4" fill="#f7efdc"/>`+
+   `<rect x="262" y="38" width="64" height="24" fill="#e9d8a8" opacity=".85" transform="rotate(-8 294 50)"/><rect x="478" y="38" width="64" height="24" fill="#e9d8a8" opacity=".85" transform="rotate(7 510 50)"/>`+
+   fig(352,AMB)+fig(448,ROS)+
+   `<text class="fadein" x="400" y="132" text-anchor="middle" font-family="Caveat" font-weight="600" font-size="64" fill="#3b2f2a" style="animation-delay:.2s">Sherwood</text>`+
+   dr('M240 150 Q400 138 560 150',.4)+
+   `<circle class="dr" pathLength="1" cx="352" cy="262" r="17" fill="none" stroke="#3b2f2a" stroke-width="3" style="animation-delay:.8s"/>`+
+   dr('M352 279 L352 345 M352 296 Q372 312 394 322 M352 296 Q334 316 330 336 M352 345 L342 394 M352 345 L364 394',1.2)+
+   dr('M335 252 Q338 234 352 236 Q370 234 370 252',1.6)+
+   `<circle class="dr" pathLength="1" cx="448" cy="262" r="17" fill="none" stroke="#3b2f2a" stroke-width="3" style="animation-delay:1.8s"/>`+
+   dr('M448 279 L448 345 M448 296 Q428 312 406 322 M448 296 Q466 316 470 336 M448 345 L438 394 M448 345 L460 394',2.2)+
+   dr('M430 258 Q426 232 448 234 Q470 232 466 258 L470 300',2.6)+
+   dr('M394 322 Q400 316 406 322',3)+
+   `<g class="fadein" style="animation-delay:3.2s">${heart(400,300,.9,ROS)}</g>`+
+   `<g class="fadein" style="animation-delay:3.6s" fill="#3b2f2a" font-size="26"><text x="260" y="210">♪</text><text x="520" y="196">♫</text><text x="290" y="420" font-size="20">✦</text><text x="500" y="424" font-size="20">✦</text></g></g>`}}
+]},
+{n:3,mes:'Mes 3',name:'Ganó el amor',scenes:[
+ {dur:4,cap:'El tercer mes: la prueba más difícil, y la más linda.',draw:titleCard(3,'Mes 3','Ganó el amor',{sky:['#3b2a63','#ffb47a'],hc:['#3a2350','#241437']},{x:400,y:335,r:44,c:'#ffe2a8',pulse:true})},
+ {cap:'El tercer mes trajo desencuentros. Muchos.',draw:()=>base({sky:['#0d0a1e','#33264f'],hc:['#1a1230','#110b22']})+cloud(200,100,1.5,'#241a3b')+cloud(600,90,1.6,'#2a1f45')+cloud(400,140,1.4,'#1d1533')+
+   `<polygon class="bolt" points="420,0 378,150 414,150 366,300 452,118 416,118 458,0" fill="#fff3c4"/>`+
+   thread({sag:60,col:'#8a79b5',op:.45,w:2,flow:false})+D({flip:-1,sit:false,arm:null,tilt:8})+Y({flip:1,arm:null,tilt:8})+rain(70,17,.6)+`<rect class="flash" width="800" height="500" fill="#fff"/>`},
+ {cap:'A veces hablábamos y no nos entendíamos. Cada palabra rebotaba y volvía distinta.',draw:()=>base({sky:['#150f2b','#46305f'],hc:['#1a1230','#110b22'],mid:cloud(400,90,1.6,'#2a1f45')})+
+   `<g class="pop" style="animation-delay:0s">${bubble(120,180,70,1,0,glyph('?','#c4792f')).replace(/<g class="pop"[^>]*>|<\/g>$/g,'')}</g><g class="pop" style="animation-delay:.7s">${bubble(610,180,70,-1,0,glyph('!','#c24a78')).replace(/<g class="pop"[^>]*>|<\/g>$/g,'')}</g>`+
+   `<g class="pop" style="animation-delay:2.4s">${bubble(120,110,70,1,0,glyph('…','#c4792f')).replace(/<g class="pop"[^>]*>|<\/g>$/g,'')}</g><g class="pop" style="animation-delay:3.1s">${bubble(610,110,70,-1,0,glyph('?!','#c24a78')).replace(/<g class="pop"[^>]*>|<\/g>$/g,'')}</g>`+
+   `<g fill="#ffd9a0" opacity=".9"><circle class="tw" cx="400" cy="270" r="5"/><circle class="tw" cx="380" cy="250" r="3"/><circle class="tw" cx="425" cy="245" r="3"/><circle class="tw" cx="410" cy="295" r="3"/></g>`+
+   thread({sag:50,col:'#8a79b5',op:.5,w:2,flow:false})+D({tilt:-10})+Y({tilt:-10})},
+ {cap:'Pero aun en medio de todo seguíamos mirando la misma luna. Seguíamos eligiéndonos.',draw:()=>base({sky:['#0a1230','#28446f'],stars:1,orb:{x:400,y:130,r:50,c:'#f4ecd2',moon:true},seed:19,hc:['#0f1a35','#0a1226']})+
+   thread({sag:70,col:'#c9d7f0',op:.5,w:2,flow:false})+D({sit:true,tilt:-14,arm:null})+Y({sit:true,tilt:-14,arm:null})+notes([[170,270,20,0,'✦'],[630,270,20,1.5,'✦']],'#ffe9a8')},
+ {cap:'Y cuando aclaró, nos encontramos de nuevo a mitad de camino. Ganó el amor.',draw:()=>base({sky:['#3b2a63','#ffb47a'],orb:{x:400,y:330,r:46,c:'#ffe2a8',pulse:true},stars:.3,hc:['#3a2350','#241437']})+
+   `<g class="walkL">${person({x:161,y:340,c:AMB,cd:AMBD,hair:'short'})}</g><g class="walkR">${person({x:639,y:340,flip:-1,c:ROS,cd:ROSD,hair:'long'})}</g>`+
+   notes([[390,300,26,2,'♪'],[420,290,22,3.2,'♫']],'#fff3d6')},
+ {cap:'Tres meses. Distancia, música, bajones, tormentas. Y acá seguimos, más juntos que nunca.',draw:()=>{
+   const hs=[[300,300,.9,0],[360,250,.7,.8],[440,240,1,1.6],[510,300,.8,2.4],[400,200,.8,3.2],[330,180,.6,4],[480,170,.7,4.8]].map(h=>`<g class="floatup" style="animation-delay:${h[3]}s;animation-duration:6s">${heart(h[0],h[1],h[2],h[3]%2?AMB:ROS)}</g>`).join('');
+   return base({sky:['#6a3f8f','#ffd08a'],orb:{x:400,y:340,r:62,c:'#fff1c4',pulse:true},stars:.15,hc:['#4a2a5e','#2e1740']})+hs+
+   person({x:366,y:420,s:1.5,c:AMB,cd:AMBD,hair:'short',tilt:12,arm:{x:34,y:-46}})+person({x:434,y:420,s:1.5,flip:-1,c:ROS,cd:ROSD,hair:'long',tilt:12,arm:{x:34,y:-46}})}},
+ {final:true,cap:'Gracias por quedarte, por elegirme y por cada canción que nos dedicamos. Feliz tres meses, Yuzuri. — Damián',draw:()=>{
+   const hs=[[120,420,.8,0],[690,430,.9,1.4],[240,440,.6,2.8],[580,440,.7,4.2]].map(h=>`<g class="floatup" style="animation-delay:${h[3]}s;animation-duration:7s">${heart(h[0],h[1],h[2],h[3]>2?AMB:ROS)}</g>`).join('');
+   const t=(y,size,fill,delay,txt,fam='Hanken Grotesk',w=400,ls=0)=>`<text class="fadein" x="400" y="${y}" text-anchor="middle" font-family="${fam}" font-weight="${w}" font-size="${size}" letter-spacing="${ls}" fill="${fill}" style="animation-delay:${delay}s">${txt}</text>`;
+   return base({sky:['#0e0a22','#2b1650'],stars:1,orb:{x:640,y:90,r:26,c:'#f4ecd2',moon:true},hills:false,seed:23})+hs+
+   t(110,38,AMB,.3,'Una serie de Damián','Caveat',600)+t(200,76,'#fff',1,'FELIZ TRES MESES,','Big Shoulders Display',800,4)+t(292,92,ROS,1.7,'YUZURI','Big Shoulders Display',800,6)+
+   t(352,17,'#e6dcf2',2.8,'Protagonizada por Yuzuri y Damián')+t(379,17,'#e6dcf2',3.3,'Banda sonora: el rock nacional que nos junta')+t(406,17,'#e6dcf2',3.8,'Locación: Sherwood, y los kilómetros que hay en el medio')+
+   t(462,44,AMB,5,'Continuará…','Caveat',600)}}
+]}
+];
+
+/* ---------- reproductor ---------- */
+const $=s=>document.querySelector(s);
+const player=$('#player'),svg=$('#svg'),segs=$('#segs'),cap=$('#cap'),tag=$('#tag'),line=$('#line'),pos=$('#pos'),epsEl=$('#eps');
+let st={ep:0,i:0},playing=false,started=false;
+
+epsEl.innerHTML=EPS.map((e,k)=>`<button class="ep" data-k="${k}"><small>Ep. ${e.n} · ${e.mes}</small><strong>${e.name}</strong></button>`).join('');
+epsEl.addEventListener('click',e=>{const b=e.target.closest('.ep');if(b){begin();go(+b.dataset.k,0)}});
+
+function render(){
+  const e=EPS[st.ep],sc=e.scenes[st.i];
+  svg.innerHTML=`<g class="sceneIn">${sc.draw()}</g>`;
+  svg.setAttribute('aria-label',sc.cap);
+  tag.textContent=`${e.mes} · ${e.name}`+(SONGS[e.n]?` · ♪ ${SONGS[e.n]}`:'');
+  line.textContent=sc.cap;
+  cap.classList.remove('swap');void cap.offsetWidth;cap.classList.add('swap');
+  const dur=sc.dur||7;
+  segs.innerHTML=e.scenes.map((s,k)=>`<i class="seg ${k<st.i?'done':k===st.i?(sc.final?'hold':'cur'):''}" ${k===st.i?`style="--dur:${dur}s"`:''}><b></b></i>`).join('');
+  pos.textContent=`Ep. ${e.n} · ${st.i+1} de ${e.scenes.length}`;
+  [...epsEl.children].forEach((b,k)=>b.setAttribute('aria-current',k===st.ep?'true':'false'));
+  $('#replay').hidden=!sc.final;
+  $('#prev').disabled=(st.ep===0&&st.i===0);
+  $('#next').disabled=!!sc.final;
+  if(started){try{history.replaceState(null,'','#ep'+e.n)}catch(_){}}
+}
+function go(ep,i){st.ep=ep;st.i=i;render()}
+function next(){const e=EPS[st.ep];if(st.i<e.scenes.length-1)go(st.ep,st.i+1);else if(st.ep<EPS.length-1)go(st.ep+1,0)}
+function prev(){if(st.i>0)go(st.ep,st.i-1);else if(st.ep>0)go(st.ep-1,EPS[st.ep-1].scenes.length-1)}
+function setPlay(p){playing=p;player.classList.toggle('paused',!p);
+  $('#playIcon').innerHTML=p?'<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>':'<path d="M7 4l13 8-13 8z"/>';
+  $('#play').setAttribute('aria-label',p?'Pausar':'Reproducir')}
+function begin(){if(started)return;started=true;$('#intro').hidden=true;setPlay(!matchMedia('(prefers-reduced-motion: reduce)').matches)}
+function fromHash(){const m=/^#ep([1-3])$/.exec(location.hash);return m?+m[1]-1:0}
+
+segs.addEventListener('animationend',e=>{if(e.animationName==='fill'&&playing)next()});
+$('#tapNext').onclick=next;$('#tapPrev').onclick=prev;$('#next').onclick=next;$('#prev').onclick=prev;
+$('#play').onclick=()=>setPlay(!playing);
+$('#replay').onclick=()=>go(0,0);
+$('#go').onclick=()=>{begin();go(fromHash(),0)};
+document.addEventListener('keydown',e=>{if(!started)return;if(e.key==='ArrowRight')next();else if(e.key==='ArrowLeft')prev();else if(e.key===' '&&e.target===document.body){e.preventDefault();setPlay(!playing)}});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&playing)setPlay(false)});
+window.addEventListener('hashchange',()=>{const k=fromHash();if(started&&k!==st.ep)go(k,0)});
+
+go(0,3);  // fondo de la portada: el hilo entre los dos
+})();
+</script>
+
+</body></html>
